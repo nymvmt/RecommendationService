@@ -39,8 +39,8 @@ jobs:
       - name: Build and push (immutable tag)
         uses: docker/build-push-action@v6
         with:
-          context: ./recommendation-service
-          file: ./recommendation-service/Dockerfile
+          context: .
+          file: ./Dockerfile
           platforms: linux/amd64
           push: true
           tags: |
