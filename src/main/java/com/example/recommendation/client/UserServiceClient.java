@@ -1,6 +1,8 @@
 package com.example.recommendation.client;
 
+import com.example.recommendation.dto.ApiResponse;
 import com.example.recommendation.dto.UserResponse;
+import org.springframework.core.ParameterizedTypeReference;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,12 +31,14 @@ public class UserServiceClient {
                 .defaultHeader("User-Agent", "recommendation-service/1.0")
                 .build();
         
-        UserResponse userResponse = webClient
+        ApiResponse<UserResponse> apiResponse = webClient
                 .get()
                 .uri("/users/{userId}", userId)
                 .retrieve()
-                .bodyToMono(UserResponse.class)
+                .bodyToMono(new ParameterizedTypeReference<ApiResponse<UserResponse>>() {})
                 .block();
+        
+        UserResponse userResponse = apiResponse != null && apiResponse.isSuccess() ? apiResponse.getData() : null;
         
         log.info("UserService에서 사용자 정보 조회 완료 - userId: {}, username: {}", 
                 userId, userResponse != null ? userResponse.getUsername() : "null");
