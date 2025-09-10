@@ -1,10 +1,14 @@
 package com.example.recommendation.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserResponse {
@@ -12,5 +16,4 @@ public class UserResponse {
     private Boolean isAdmin;
     private String username;
     private String nickname;
-    // password는 보안상 응답에 포함하지 않음
 }
