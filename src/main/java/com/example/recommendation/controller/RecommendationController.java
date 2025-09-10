@@ -19,7 +19,7 @@ public class RecommendationController {
      * 사용자 정보 조회 테스트
      * GET /recommendations/user/{userId}
      */
-    @GetMapping("/user/{userId}")
+    @GetMapping("/user/{userId:.+}")
     public ResponseEntity<UserResponse> getUserInfo(@PathVariable String userId) {
         log.info("사용자 정보 조회 요청 - userId: {}", userId);
         
