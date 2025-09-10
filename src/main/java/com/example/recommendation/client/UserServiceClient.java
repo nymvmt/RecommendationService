@@ -67,4 +67,52 @@ public class UserServiceClient {
         log.error("UserService 재시도 실패 - userId: {}", userId);
         return null;
     }
+    
+    /**
+     * 모든 사용자 목록 조회
+     * user-service의 GET /users API 호출
+     */
+    public Object getAllUsers() {
+        log.info("UserService에서 모든 사용자 목록 조회 시작");
+        
+        // 재시도 로직 포함
+        int retryCount = 0;
+        while (retryCount < 3) {
+            try {
+                WebClient webClient = webClientBuilder
+                        .baseUrl(userServiceUrl)
+                        .defaultHeader("X-API-Key", apiKey)
+                        .defaultHeader("User-Agent", "recommendation-service/1.0")
+                        .build();
+                
+                Object apiResponse = webClient
+                        .get()
+                        .uri("/users")
+                        .retrieve()
+                        .bodyToMono(Object.class)
+                        .block();
+                
+                if (apiResponse != null) {
+                    log.info("UserService에서 모든 사용자 목록 조회 성공");
+                    return apiResponse;
+                }
+                
+            } catch (Exception e) {
+                retryCount++;
+                log.warn("UserService 모든 사용자 목록 호출 실패 - {}회차 재시도", retryCount, e);
+                
+                if (retryCount < 3) {
+                    try {
+                        Thread.sleep(500); // 0.5초 대기 후 재시도
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+            }
+        }
+        
+        log.error("UserService 모든 사용자 목록 재시도 실패");
+        throw new RuntimeException("사용자 목록 조회에 실패했습니다");
+    }
 }
