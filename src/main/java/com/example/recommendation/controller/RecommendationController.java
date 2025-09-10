@@ -25,6 +25,26 @@ public class RecommendationController {
     }
     
     /**
+     * 사용자 정보 조회 (PathVariable 방식)
+     * GET /recommendations/users/{userId}
+     */
+    @GetMapping("/users/{userId:.+}")
+    public ResponseEntity<UserResponse> getUsers(@PathVariable String userId) {
+        log.info("사용자 정보 조회 요청 - userId: {}", userId);
+        
+        UserResponse userResponse = userServiceClient.getUserById(userId);
+        
+        if (userResponse != null) {
+            log.info("사용자 정보 조회 성공 - userId: {}, username: {}", 
+                    userId, userResponse.getUsername());
+            return ResponseEntity.ok(userResponse);
+        } else {
+            log.warn("사용자 정보를 찾을 수 없음 - userId: {}", userId);
+            return ResponseEntity.notFound().build();
+        }
+    }
+    
+    /**
      * 사용자 정보 조회 테스트
      * GET /recommendations/user/{userId}
      */
