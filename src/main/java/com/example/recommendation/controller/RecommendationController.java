@@ -16,6 +16,15 @@ public class RecommendationController {
     private final UserServiceClient userServiceClient;
     
     /**
+     * 간단한 테스트 엔드포인트
+     * GET /recommendations/test
+     */
+    @GetMapping("/test")
+    public ResponseEntity<String> test() {
+        return ResponseEntity.ok("recommendation-service is working!");
+    }
+    
+    /**
      * 사용자 정보 조회 테스트
      * GET /recommendations/user/{userId}
      */
