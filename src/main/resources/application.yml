@@ -1,9 +1,14 @@
 server:
-  port: ${SERVER_PORT:8087}
+  # Azure에서는 8087, 로컬에서는 8081 사용
+  port: ${WEBSITES_PORT:8081}
 
 spring:
   application:
     name: recommendation-service
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
@@ -27,11 +32,21 @@ services:
     url: ${USER_SERVICE_URL}
     api-key: ${USER_SERVICE_API_KEY}
 
+azure:
+  docintel:
+    endpoint: ${AZURE_DOC_INTEL_ENDPOINT}
+    key: ${AZURE_DOC_INTEL_KEY}
+    apiVersion: 2024-11-30
+    modelId: prebuilt-receipt
+
 management:
   endpoints:
     web:
       exposure:
         include: health,info
+  endpoint:
+    health:
+      show-details: always
 
 ---
 spring:
