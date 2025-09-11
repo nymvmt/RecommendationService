@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영수증 분배 테스트</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .container { background: #f5f5f5; padding: 20px; border-radius: 10px; margin: 10px 0; }
+        .result { background: #e8f5e8; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .error { background: #ffe8e8; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+        input, select { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 3px; }
+        .item { background: white; padding: 10px; margin: 5px 0; border-radius: 5px; border-left: 4px solid #007bff; }
+        .person { background: #fff3cd; padding: 10px; margin: 5px 0; border-radius: 5px; border-left: 4px solid #ffc107; }
+        .loading { background: #e3f2fd; padding: 15px; border-radius: 5px; margin: 10px 0; text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>🍽️ 영수증 자동 분배 테스트</h1>
+    
+    <!-- 테스트 1: 기본 연결 확인 -->
+    <div class="container">
+        <h3>1️⃣ 기본 연결 테스트</h3>
+        <button onclick="testConnection()">서비스 연결 확인</button>
+        <div id="connectionResult"></div>
+    </div>
+
+    <!-- 테스트 2: OCR 테스트 -->
+    <div class="container">
+        <h3>2️⃣ OCR 테스트 (영수증 인식)</h3>
+        <button onclick="testOCR()">영수증 분석하기</button>
+        <div id="ocrResult"></div>
+    </div>
+
+    <!-- 테스트 3: 자동 분배 테스트 -->
+    <div class="container">
+        <h3>3️⃣ 자동 분배 테스트</h3>
+        <label>참여 인원: </label>
+        <select id="peopleCount">
+            <option value="2">2명</option>
+            <option value="3" selected>3명</option>
+            <option value="4">4명</option>
+            <option value="5">5명</option>
+        </select>
+        <button onclick="testSplit()">자동 분배하기</button>
+        <div id="splitResult"></div>
+    </div>
+
+    <!-- 테스트 4: 참여자 지정 분배 -->
+    <div class="container">
+        <h3>4️⃣ 참여자 지정 분배</h3>
+        <div>
+            <input type="text" id="person1" placeholder="참여자1 이름" value="김철수">
+            <input type="text" id="person2" placeholder="참여자2 이름" value="이영희">
+            <input type="text" id="person3" placeholder="참여자3 이름" value="박민수">
+        </div>
+        <button onclick="testSplitWithNames()">이름 지정 분배하기</button>
+        <div id="namedSplitResult"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://kt-pj2-recommendation-app-bkcjg5edc5eahmbn.koreacentral-01.azurewebsites.net';
+        const TEST_IMAGE = 'https://cafeptthumb-phinf.pstatic.net/MjAyMDA4MDVfODgg/MDAxNTk2NjAwODIyNDMz.Qi3hFAbqJvzlh5dBuBBdh-sjRnL-nBzFsepx39EsbFQg.gkiyjilDQ94ahHIMaelQX_oFq-jQgYujDe6mYpRVUd4g.JPEG/externalFile.jpg?type=w1600';
+
+        // 로딩 표시 함수
+        function showLoading(elementId, message = "처리 중...") {
+            document.getElementById(elementId).innerHTML = 
+                `<div class="loading">⏳ ${message}</div>`;
+        }
+
+        // 1. 기본 연결 테스트
+        async function testConnection() {
+            showLoading('connectionResult', '연결 확인 중...');
+            try {
+                const response = await fetch(`${API_BASE}/recommendations/test`, {
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.text();
+                document.getElementById('connectionResult').innerHTML = 
+                    `<div class="result">✅ 연결 성공: ${result}</div>`;
+            } catch (error) {
+                document.getElementById('connectionResult').innerHTML = 
+                    `<div class="error">❌ 연결 실패: ${error.message}</div>`;
+            }
+        }
+
+        // 2. OCR 테스트
+        async function testOCR() {
+            showLoading('ocrResult', '영수증 분석 중...');
+            try {
+                const response = await fetch(`${API_BASE}/api/ocr/receipt/url`, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ imageUrl: TEST_IMAGE })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                
+                let html = `<div class="result">
+                    <h4>🏪 가게: ${result.merchant}</h4>
+                    <h4>💰 총액: ${result.total.toLocaleString()}원</h4>
+                    <h4>📋 메뉴 목록:</h4>`;
+                
+                result.items.forEach((item, index) => {
+                    html += `<div class="item">
+                        ${index + 1}. ${item.description} - ${item.totalPrice.toLocaleString()}원
+                    </div>`;
+                });
+                
+                html += '</div>';
+                document.getElementById('ocrResult').innerHTML = html;
+            } catch (error) {
+                document.getElementById('ocrResult').innerHTML = 
+                    `<div class="error">❌ OCR 실패: ${error.message}</div>`;
+            }
+        }
+
+        // 3. 자동 분배 테스트
+        async function testSplit() {
+            showLoading('splitResult', '분배 처리 중...');
+            try {
+                // 먼저 OCR 실행
+                const ocrResponse = await fetch(`${API_BASE}/api/ocr/receipt/url`, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ imageUrl: TEST_IMAGE })
+                });
+                
+                if (!ocrResponse.ok) {
+                    throw new Error(`OCR 실패: HTTP ${ocrResponse.status}`);
+                }
+                
+                const ocrResult = await ocrResponse.json();
+                
+                // 분배 실행
+                const people = parseInt(document.getElementById('peopleCount').value);
+                const splitResponse = await fetch(`${API_BASE}/api/ocr/receipt/split`, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        people: people,
+                        items: ocrResult.items
+                    })
+                });
+                
+                if (!splitResponse.ok) {
+                    throw new Error(`분배 실패: HTTP ${splitResponse.status}`);
+                }
+                
+                const splitResult = await splitResponse.json();
+                displaySplitResult(splitResult, 'splitResult');
+            } catch (error) {
+                document.getElementById('splitResult').innerHTML = 
+                    `<div class="error">❌ 분배 실패: ${error.message}</div>`;
+            }
+        }
+
+        // 4. 참여자 지정 분배
+        async function testSplitWithNames() {
+            showLoading('namedSplitResult', '참여자 지정 분배 중...');
+            try {
+                // 먼저 OCR 실행
+                const ocrResponse = await fetch(`${API_BASE}/api/ocr/receipt/url`, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ imageUrl: TEST_IMAGE })
+                });
+                
+                if (!ocrResponse.ok) {
+                    throw new Error(`OCR 실패: HTTP ${ocrResponse.status}`);
+                }
+                
+                const ocrResult = await ocrResponse.json();
+                
+                // 참여자 정보 수집
+                const participants = [
+                    { name: document.getElementById('person1').value, nickname: document.getElementById('person1').value },
+                    { name: document.getElementById('person2').value, nickname: document.getElementById('person2').value },
+                    { name: document.getElementById('person3').value, nickname: document.getElementById('person3').value }
+                ];
+                
+                // 분배 실행
+                const splitResponse = await fetch(`${API_BASE}/api/ocr/receipt/split`, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        people: 3,
+                        participants: participants,
+                        items: ocrResult.items
+                    })
+                });
+                
+                if (!splitResponse.ok) {
+                    throw new Error(`분배 실패: HTTP ${splitResponse.status}`);
+                }
+                
+                const splitResult = await splitResponse.json();
+                displaySplitResult(splitResult, 'namedSplitResult');
+            } catch (error) {
+                document.getElementById('namedSplitResult').innerHTML = 
+                    `<div class="error">❌ 분배 실패: ${error.message}</div>`;
+            }
+        }
+
+        // 분배 결과 표시 함수
+        function displaySplitResult(result, elementId) {
+            let html = `<div class="result">
+                <h4>🎯 분배 결과 (${result.people}명)</h4>
+                <p>📊 총 ${result.itemCount}개 항목 중 ${result.assignedCount}개 분배됨</p>
+                <p>💰 분배된 총액: ${result.totalAssigned.toLocaleString()}원</p>
+            `;
+            
+            result.cards.forEach((card, index) => {
+                const person = card.participant;
+                const personName = person.nickname || person.name || `참여자${index + 1}`;
+                
+                html += `<div class="person">
+                    <h5>👤 ${personName} (${card.itemCount}개 항목, ${card.totalAmount.toLocaleString()}원)</h5>`;
+                
+                card.items.forEach(item => {
+                    html += `<div class="item">• ${item.description} - ${item.totalPrice.toLocaleString()}원</div>`;
+                });
+                
+                html += '</div>';
+            });
+            
+            html += '</div>';
+            document.getElementById(elementId).innerHTML = html;
+        }
+    </script>
+</body>
+</html>
