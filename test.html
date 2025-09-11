@@ -245,7 +245,7 @@
                 const personName = person.nickname || person.name || `참여자${index + 1}`;
                 
                 html += `<div class="person">
-                    <h5>👤 ${personName} (${card.itemCount}개 항목, ${card.totalAmount.toLocaleString()}원)</h5>`;
+                    <h5>👤 ${personName} (${card.count}개 항목, ${card.subtotal.toLocaleString()}원)</h5>`;
                 
                 card.items.forEach(item => {
                     html += `<div class="item">• ${item.description} - ${item.totalPrice.toLocaleString()}원</div>`;

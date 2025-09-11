@@ -26,6 +26,14 @@ spring:
     init:
       mode: never
 
+# CORS 설정
+cors:
+  allowed-origins: "*"
+  allowed-methods: "GET,POST,PUT,DELETE,OPTIONS,PATCH,HEAD"
+  allowed-headers: "*"
+  allow-credentials: true
+  max-age: 3600
+
 # 다른 서비스 URL 설정
 services:
   user:
@@ -53,4 +61,3 @@ spring:
   config:
     activate:
       on-profile: azure
-      

@@ -5,7 +5,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.*;
 import org.springframework.web.filter.CorsFilter;
 
-import java.util.List;
+import java.util.Arrays;
+import java.util.Collections;
 
 @Configuration
 public class WebCorsConfig {
@@ -13,20 +14,23 @@ public class WebCorsConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration cfg = new CorsConfiguration();
         
-        // 모든 도메인 허용 (개발 및 프로덕션 환경 모두 지원)
-        cfg.setAllowedOriginPatterns(List.of("*"));
+        // 모든 도메인 허용 (와일드카드)
+        cfg.setAllowedOriginPatterns(Collections.singletonList("*"));
         
-        // 허용할 HTTP 메서드
-        cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS","PATCH"));
+        // 모든 HTTP 메서드 허용
+        cfg.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"));
         
-        // 허용할 헤더 (모든 헤더 허용)
-        cfg.setAllowedHeaders(List.of("*"));
+        // 모든 헤더 허용
+        cfg.setAllowedHeaders(Collections.singletonList("*"));
+        
+        // 노출할 헤더
+        cfg.setExposedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
         
         // 쿠키 및 인증 정보 허용
         cfg.setAllowCredentials(true);
         
-        // Preflight 요청 캐시 시간 (24시간)
-        cfg.setMaxAge(86400L);
+        // Preflight 요청 캐시 시간 (1시간)
+        cfg.setMaxAge(3600L);
         
         // 모든 경로에 CORS 설정 적용
         UrlBasedCorsConfigurationSource src = new UrlBasedCorsConfigurationSource();
